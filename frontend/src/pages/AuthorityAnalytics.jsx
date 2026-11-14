@@ -13,7 +13,7 @@ const CATEGORY_COLORS = {
   other: '#64748b',
 };
 
-const DEFAULT_CENTER = [25.594, 85.137];
+const DEFAULT_CENTER = [20.2961, 85.8245];
 
 export default function AuthorityAnalytics() {
   const token = localStorage.getItem('civic_odisha_token');
