@@ -4,11 +4,11 @@ const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState(() => {
-    return localStorage.getItem('civique_lang') || 'english';
+    return localStorage.getItem('civic_odisha_lang') || 'english';
   });
 
   useEffect(() => {
-    localStorage.setItem('civique_lang', lang);
+    localStorage.setItem('civic_odisha_lang', lang);
   }, [lang]);
 
   return (

@@ -7,7 +7,7 @@ import { translations } from '../i18n';
 import { useLanguage } from '../LanguageContext';
 
 export default function Dashboard() {
-  const token = localStorage.getItem('civique_token');
+  const token = localStorage.getItem('civic_odisha_token');
   const { lang } = useLanguage();
   const t = translations[lang].dashboardPage;
 

@@ -9,7 +9,7 @@ cloudinary.config({
 
 // Uploads a buffer (from multer memoryStorage) to Cloudinary and
 // resolves with the result, which includes secure_url.
-function uploadBufferToCloudinary(buffer, folder = 'civique') {
+function uploadBufferToCloudinary(buffer, folder = 'civic-odisha') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream({ folder }, (error, result) => {
       if (result) resolve(result);

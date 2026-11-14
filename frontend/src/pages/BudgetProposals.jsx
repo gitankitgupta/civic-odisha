@@ -30,8 +30,8 @@ export default function BudgetProposals() {
 
   const handleVote = async (id, voteType) => {
     setVotingId(id);
-    const voterId = localStorage.getItem('civique_voter_id') || `anon-${Date.now()}`;
-    localStorage.setItem('civique_voter_id', voterId);
+    const voterId = localStorage.getItem('civic_odisha_voter_id') || `anon-${Date.now()}`;
+    localStorage.setItem('civic_odisha_voter_id', voterId);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/budget/proposals/${id}/vote`, {

@@ -50,7 +50,7 @@ router.post('/', submissionLimiter, upload.single('photo'), async (req, res) => 
     }
 
     if (req.file) {
-      const result = await uploadBufferToCloudinary(req.file.buffer, 'civique/grievances');
+      const result = await uploadBufferToCloudinary(req.file.buffer, 'civic-odisha/grievances');
       grievanceData.media = [{ type: 'image', url: result.secure_url }];
     }
 
@@ -105,7 +105,7 @@ router.patch('/:id/status', verifyToken, requireRole('dept_staff', 'admin'), upl
     }
 
     if (status === 'resolved' && req.file) {
-      const result = await uploadBufferToCloudinary(req.file.buffer, 'civique/resolution-evidence');
+      const result = await uploadBufferToCloudinary(req.file.buffer, 'civic-odisha/resolution-evidence');
       await addResolutionEvidence(req.params.id, {
         staffId: req.user.id,
         mediaUrl: result.secure_url,

@@ -33,7 +33,7 @@ function LanguageSwitcher({ lang, setLang }) {
 
 function Navbar({ lang, setLang }) {
   const t = translations[lang];
-  const token = localStorage.getItem('civique_token');
+  const token = localStorage.getItem('civic_odisha_token');
   const navLink = 'text-sm font-medium text-[#0B1F3A]/70 hover:text-[#0EA5A0] transition-colors';
   return (
     <nav

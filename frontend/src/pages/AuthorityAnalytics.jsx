@@ -16,7 +16,7 @@ const CATEGORY_COLORS = {
 const DEFAULT_CENTER = [25.594, 85.137];
 
 export default function AuthorityAnalytics() {
-  const token = localStorage.getItem('civique_token');
+  const token = localStorage.getItem('civic_odisha_token');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
