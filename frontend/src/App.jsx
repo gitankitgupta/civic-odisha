@@ -44,7 +44,7 @@ function Navbar({ lang, setLang }) {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap');
       `}</style>
       <Link to="/" className="text-lg font-bold text-[#0B1F3A]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-        Civ<span className="text-[#0EA5A0]">i</span>que
+        Civic <span className="text-[#0EA5A0]">Odisha</span>
       </Link>
       <div className="flex gap-5 text-sm items-center">
         <Link to="/feed" className={navLink}>{t.feed}</Link>

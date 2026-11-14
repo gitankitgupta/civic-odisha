@@ -37,7 +37,7 @@ export default function PublicTracking() {
 
       <div className="max-w-2xl mx-auto px-6 py-12">
         <Link to="/" className="display-font text-lg font-bold text-[#0B1F3A] mb-6 inline-block">
-          Civ<span className="text-[#0EA5A0]">i</span>que
+          Civic <span className="text-[#0EA5A0]">Odisha</span>
         </Link>
         <p className="display-font text-xs font-semibold tracking-[0.2em] text-[#0EA5A0] mb-4">PUBLIC TRACKING</p>
 

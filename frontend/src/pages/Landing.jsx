@@ -119,7 +119,7 @@ export default function Landing() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-[#E5EEEC]' : 'bg-transparent'}`}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <a href="#home" className="display-font text-xl font-bold text-[#0B1F3A]">
-            Civ<span className="text-[#0EA5A0]">i</span>que
+            Civic <span className="text-[#0EA5A0]">Odisha</span>
           </a>
           <div className="hidden md:flex items-center gap-8">
             <a href="#home" className={navLink}>{t.navHome}</a>
