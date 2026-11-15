@@ -22,7 +22,7 @@ router.post('/', submissionLimiter, upload.single('photo'), async (req, res) => 
     console.log('File received:', req.file ? 'YES - ' + req.file.originalname : 'NO FILE');
 
     const grievanceData = { ...req.body };
-        // If the request carries a valid Supabase session token, link this
+    // If the request carries a valid Supabase session token, link this
     // grievance to the authenticated citizen instead of leaving it anonymous.
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -52,6 +52,13 @@ router.post('/', submissionLimiter, upload.single('photo'), async (req, res) => 
     if (req.file) {
       const result = await uploadBufferToCloudinary(req.file.buffer, 'civic-odisha/grievances');
       grievanceData.media = [{ type: 'image', url: result.secure_url }];
+    }
+
+    // Form-data values arrive as strings, so convert and validate coordinates
+    const lat = parseFloat(grievanceData.latitude);
+    const lng = parseFloat(grievanceData.longitude);
+    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      grievanceData.location = { lat, lng };
     }
 
     const grievance = await createGrievance(grievanceData);
@@ -210,11 +217,14 @@ router.get('/map/all', async (req, res) => {
       .map((g) => ({
         id: g.id,
         title: g.title,
+        description: g.description,
+        address: g.address,
         category: g.category,
         status: g.status,
         lat: g.location.lat,
         lng: g.location.lng,
         priorityScore: g.priorityScore,
+        createdAt: g.createdAt,
       }));
     res.json(mapData);
   } catch (err) {
