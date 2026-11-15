@@ -28,6 +28,7 @@ async function mapRowToGrievance(row) {
     citizenId: row.is_anonymous ? null : row.citizen_id,
     isAnonymous: row.is_anonymous,
     location: { lat: row.latitude, lng: row.longitude, wardId: row.ward_id },
+    address: row.address,
     media: mediaRes.rows,
     duplicateOf: row.duplicate_of,
     similarityScore: row.similarity_score,
@@ -41,7 +42,7 @@ async function mapRowToGrievance(row) {
     updatedAt: row.updated_at,
   };
 
-   const { priorityScore, priorityFactors } = calculatePriorityScore(base);
+  const { priorityScore, priorityFactors } = calculatePriorityScore(base);
   const { slaDueAt, slaHours, slaStatus } = calculateSlaStatus(base);
 
   return { ...base, priorityScore, priorityFactors, slaDueAt, slaHours, slaStatus };
@@ -58,7 +59,7 @@ async function findPossibleDuplicate(data) {
   let usedSemantic = false;
 
   for (const g of res.rows) {
-    const gLocation = { lat: g.lat, lng: g.lng, wardId: g.ward_id };
+    const gLocation = { lat: g.latitude, lng: g.longitude, wardId: g.ward_id };
     if (!isNearby(gLocation, data.location)) continue;
 
     const textA = `${g.title} ${g.description}`;
@@ -88,15 +89,16 @@ async function findPossibleDuplicate(data) {
   }
   return null;
 }
+
 async function createGrievance(data) {
   const duplicate = await findPossibleDuplicate(data);
   const language = detectLanguage(`${data.title} ${data.description}`);
-    const routing = await routeGrievance({ category: data.category, wardId: data.location?.wardId });
+  const routing = await routeGrievance({ category: data.category, wardId: data.location?.wardId });
 
-     const insertRes = await pool.query(
+  const insertRes = await pool.query(
     `INSERT INTO grievances
-      (title, description, category, status, citizen_id, is_anonymous, latitude, longitude, ward_id, duplicate_of, similarity_score, upvotes, language, department_id, routing_reason, routing_confidence)
-     VALUES ($1,$2,$3,'submitted',$4,$5,$6,$7,$8,$9,$10,0,$11,$12,$13,$14)
+      (title, description, category, status, citizen_id, is_anonymous, latitude, longitude, address, ward_id, duplicate_of, similarity_score, upvotes, language, department_id, routing_reason, routing_confidence)
+     VALUES ($1,$2,$3,'submitted',$4,$5,$6,$7,$8,$9,$10,$11,0,$12,$13,$14,$15)
      RETURNING *`,
     [
       data.title,
@@ -106,6 +108,7 @@ async function createGrievance(data) {
       data.isAnonymous || false,
       data.location?.lat || null,
       data.location?.lng || null,
+      data.address || null,
       data.location?.wardId || null,
       duplicate ? duplicate.id : null,
       duplicate ? duplicate.score : null,
@@ -152,6 +155,7 @@ async function getGrievanceById(id) {
   if (!res.rows[0]) return null;
   return mapRowToGrievance(res.rows[0]);
 }
+
 async function updateGrievanceStatus(id, { status, note, actor }) {
   const updateRes = await pool.query(
     `UPDATE grievances SET status = $1, updated_at = now() WHERE id = $2 RETURNING *`,

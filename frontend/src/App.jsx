@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MapView from './pages/MapView';
 import PublicTracking from './pages/PublicTracking';
+import TrackLookup from './pages/TrackLookup';
 import { translations, LANGUAGES } from './i18n';
 import { useLanguage } from './LanguageContext';
 import AuthorityAnalytics from './pages/AuthorityAnalytics';
@@ -49,6 +50,7 @@ function Navbar({ lang, setLang }) {
       <div className="flex gap-5 text-sm items-center">
         <Link to="/feed" className={navLink}>{t.feed}</Link>
         <Link to="/map" className={navLink}>{t.map}</Link>
+                <Link to="/track" className={navLink}>Track</Link>
         <Link to="/report" className="text-sm font-semibold bg-[#0EA5A0] text-white px-4 py-2 rounded-full hover:bg-[#0B8A85] transition-colors">
           {t.reportIssue}
         </Link>
@@ -80,6 +82,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/track/:id" element={<PublicTracking />} />
+                <Route path="/track" element={<TrackLookup />} />
         <Route path="/analytics" element={<AuthorityAnalytics />} />
         <Route path="/citizen-login" element={<CitizenLogin />} />
         <Route path="/citizen-dashboard" element={<CitizenDashboard />} />
