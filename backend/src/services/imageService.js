@@ -1,57 +1,67 @@
 const axios = require('axios');
 
-const MODEL_URL = 'https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
-function mapLabelToCategory(label) {
-  const l = label.toLowerCase();
-  if (l.includes('pothole') || l.includes('crack') || l.includes('road')) return 'pothole';
-  if (l.includes('trash') || l.includes('garbage') || l.includes('waste') || l.includes('ashcan')) return 'garbage';
-  if (l.includes('street') && l.includes('light')) return 'streetlight';
-  if (l.includes('water') || l.includes('puddle') || l.includes('flood')) return 'water';
-  if (l.includes('drain') || l.includes('sewer')) return 'drainage';
-  return null;
-}
+const CATEGORIES = ['pothole', 'garbage', 'streetlight', 'water', 'drainage'];
 
-async function callModel(imageBuffer) {
-  return axios.post(MODEL_URL, imageBuffer, {
-    headers: {
-      Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-      'Content-Type': 'application/octet-stream',
-    },
-    timeout: 25000, // 25 seconds per attempt
-  });
+const PROMPT = `You are classifying a photo submitted for a civic grievance in India.
+Pick the single best category from: ${CATEGORIES.join(', ')}.
+- pothole: damaged road, potholes, cracks
+- garbage: trash, waste dumps, overflowing bins
+- streetlight: broken or non-working street lights, light poles
+- water: water leakage, flooding, waterlogging, no water supply
+- drainage: blocked or open drains, sewage
+If the photo matches none of these, use "none".
+Respond ONLY with JSON: {"category": "<one of the above or none>", "confidence": <number between 0 and 1>}`;
+
+function detectMimeType(buffer) {
+  if (buffer[0] === 0x89 && buffer[1] === 0x50) return 'image/png';
+  if (buffer.slice(0, 4).toString() === 'RIFF') return 'image/webp';
+  return 'image/jpeg';
 }
 
 async function suggestCategoryFromImage(imageBuffer) {
-  let lastError;
-  // Retry up to 3 times — Hugging Face's free model needs a "cold start"
-  // the first time it's called, and returns a 503 while it loads.
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const res = await callModel(imageBuffer);
-      const predictions = res.data;
-
-      if (!Array.isArray(predictions) || !predictions.length) {
-        return { suggestedCategory: null, confidence: 0, rawLabel: null };
-      }
-
-      const top = predictions[0];
-      return {
-        suggestedCategory: mapLabelToCategory(top.label),
-        confidence: top.score,
-        rawLabel: top.label,
-      };
-    } catch (err) {
-      lastError = err;
-      const isLoading = err.response?.status === 503;
-      if (isLoading && attempt < 3) {
-        console.log(`Model is loading (attempt ${attempt}), retrying in 5s...`);
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        continue;
-      }
-      throw lastError;
+  const res = await axios.post(
+    API_URL,
+    {
+      contents: [
+        {
+          parts: [
+            { text: PROMPT },
+            {
+              inline_data: {
+                mime_type: detectMimeType(imageBuffer),
+                data: imageBuffer.toString('base64'),
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: { responseMimeType: 'application/json' },
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': process.env.GEMINI_API_KEY,
+      },
+      timeout: 25000,
     }
+  );
+
+  const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    return { suggestedCategory: null, confidence: 0, rawLabel: null };
   }
+
+  const parsed = JSON.parse(text);
+  const category = CATEGORIES.includes(parsed.category) ? parsed.category : null;
+
+  return {
+    suggestedCategory: category,
+    confidence: Number(parsed.confidence) || 0,
+    rawLabel: parsed.category,
+  };
 }
 
 module.exports = { suggestCategoryFromImage };
