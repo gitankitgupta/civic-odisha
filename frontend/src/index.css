@@ -15,3 +15,83 @@ body {
   color: var(--color-text-primary);
   font-family: 'Inter', system-ui, sans-serif;
 }
+/* ===== Dark theme ===== */
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+  background: #0b1220;
+  color: #e6edf3;
+}
+
+/* Backgrounds */
+[data-theme="dark"] .bg-white { background-color: #121c2e; }
+[data-theme="dark"] [class~="bg-[#F8FAF9]"] { background-color: #162236; }
+[data-theme="dark"] [class~="bg-[#F1F5F4]"] { background-color: #1b2940; }
+[data-theme="dark"] [class~="bg-[#F0FDFA]"] { background-color: #0f2e33; }
+[data-theme="dark"] [class~="bg-[#E0FBF7]"] { background-color: #14403f; }
+[data-theme="dark"] [class~="bg-[#0B1F3A]"] { background-color: #1f3b5c; }
+[data-theme="dark"] .bg-red-50 { background-color: rgba(239, 68, 68, 0.12); }
+
+/* Borders */
+[data-theme="dark"] [class~="border-[#E5EEEC]"] { border-color: #223049; }
+[data-theme="dark"] [class~="border-[#CFEFEC]"] { border-color: #1e4a4c; }
+[data-theme="dark"] [class~="border-[#CBD5D1]"] { border-color: #3a4a63; }
+[data-theme="dark"] .border-red-200 { border-color: rgba(239, 68, 68, 0.35); }
+
+/* Text */
+[data-theme="dark"] [class~="text-[#0B1F3A]"] { color: #e6edf3; }
+[data-theme="dark"] [class~="text-[#4B5A6B]"] { color: #b6c2d2; }
+[data-theme="dark"] [class~="text-[#64748B]"] { color: #9aa9bd; }
+[data-theme="dark"] [class~="text-[#94A3B8]"] { color: #7b8ba3; }
+[data-theme="dark"] .text-red-600 { color: #f87171; }
+[data-theme="dark"] .text-amber-600 { color: #fbbf24; }
+[data-theme="dark"] ::placeholder { color: #6b7b92; }
+
+/* Hover states (inhe alag se likhna padta hai, warna hover kaam nahi karega) */
+[data-theme="dark"] [class~="hover:bg-[#0EA5A0]"]:hover { background-color: #0ea5a0; }
+[data-theme="dark"] [class~="hover:bg-[#E0FBF7]"]:hover { background-color: #14403f; }
+[data-theme="dark"] [class~="hover:bg-[#F0FDFA]"]:hover { background-color: #0f2e33; }
+[data-theme="dark"] .hover\:bg-red-100:hover { background-color: rgba(239, 68, 68, 0.2); }
+[data-theme="dark"] [class~="hover:border-[#0EA5A0]"]:hover { border-color: #0ea5a0; }
+[data-theme="dark"] [class~="hover:text-[#0EA5A0]"]:hover { color: #0ea5a0; }
+[data-theme="dark"] [class~="hover:text-[#0B1F3A]"]:hover { color: #e6edf3; }
+
+/* Navbar links (App.jsx ke custom classes) */
+[data-theme="dark"] .nav-link { color: rgba(230, 237, 243, 0.75); }
+[data-theme="dark"] .nav-link:hover,
+[data-theme="dark"] .nav-link-active { color: #2dd4cf; }
+/* ===== Dark theme: extra fixes (Landing page etc.) ===== */
+
+/* Light section backgrounds that were missed */
+[data-theme="dark"] [class~="bg-[#FAFBFC]"] { background-color: #0f1829; }
+[data-theme="dark"] .bg-white\/90 { background-color: rgba(11, 18, 32, 0.9); }
+
+/* Text with opacity suffix (Tailwind makes these different class names) */
+[data-theme="dark"] [class~="text-[#0B1F3A]/70"] { color: rgba(230, 237, 243, 0.75); }
+
+/* Borders with opacity suffix */
+[data-theme="dark"] [class~="border-[#0B1F3A]/15"] { border-color: rgba(230, 237, 243, 0.2); }
+
+/* Teal text needs to be lighter on dark backgrounds to stay readable */
+[data-theme="dark"] [class~="text-[#0EA5A0]"] { color: #2dd4cf; }
+[data-theme="dark"] [class~="bg-[#F0FDFA]"] { background-color: #0f2e33; }
+
+/* Soft dividers and bullets */
+[data-theme="dark"] [class~="bg-[#CBD5E1]"] { background-color: #3a4a63; }
+[data-theme="dark"] [class~="text-[#CBD5E1]"] { color: #4a5b75; }
+/* ===== Keep Leaflet maps below the navbar ===== */
+.leaflet-container {
+  isolation: isolate;
+}
+.hero-map {
+  isolation: isolate;
+}
+/* ===== Dark theme: inline-style navy text (stat numbers etc.) ===== */
+[data-theme="dark"] [style*="rgb(11, 31, 58)"],
+[data-theme="dark"] [style*="#0B1F3A"],
+[data-theme="dark"] [style*="#0b1f3a"] {
+  color: #e6edf3 !important;
+}
