@@ -70,6 +70,9 @@ export default function ReportIssue() {
   const [submittedId, setSubmittedId] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  const [nearby, setNearby] = useState([]);
+  const [supportedIds, setSupportedIds] = useState([]);
+
   const categories = ['pothole', 'garbage', 'streetlight', 'water', 'drainage', 'other'];
 
   useEffect(() => {
@@ -80,6 +83,43 @@ export default function ReportIssue() {
     }, 600);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Look for open issues of the same category within 100 m of the pin
+  useEffect(() => {
+    if (!location) {
+      setNearby([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      fetch(
+        `${API_BASE_URL}/api/grievances/nearby?lat=${location.lat}&lng=${location.lng}&radius=100&category=${form.category}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (!cancelled && Array.isArray(data)) setNearby(data);
+        })
+        .catch(() => {});
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [location?.lat, location?.lng, form.category]);
+
+  const handleSupport = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/grievances/${id}/upvote`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to support');
+      setSupportedIds((prev) => [...prev, id]);
+      setNearby((prev) =>
+        prev.map((g) => (g.id === id ? { ...g, upvotes: data.upvotes ?? g.upvotes + 1 } : g))
+      );
+    } catch (err) {
+      console.error('Support failed:', err);
+    }
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -652,7 +692,50 @@ export default function ReportIssue() {
             )}
           </div>
 
-          {error && <p classNamFe="text-red-600 text-sm">{error}</p>}
+          {nearby.length > 0 && (
+            <div className="bg-[#F0FDFA] border border-[#CFEFEC] rounded-2xl p-4">
+              <p className="text-sm font-semibold text-[#0B1F3A] mb-1">
+                {nearby.length} similar issue{nearby.length > 1 ? 's' : ''} already reported nearby
+              </p>
+              <p className="text-xs text-[#64748B] mb-3">
+                If it is the same problem, support it instead of reporting again. If not, just continue and submit.
+              </p>
+              <div className="space-y-2">
+                {nearby.map((g) => (
+                  <div
+                    key={g.id}
+                    className="flex items-center gap-3 bg-white border border-[#E5EEEC] rounded-xl px-3 py-2.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to={`/issue/${g.id}`}
+                        target="_blank"
+                        className="text-sm font-semibold text-[#0B1F3A] hover:text-[#0EA5A0] block truncate"
+                      >
+                        {g.title}
+                      </Link>
+                      <p className="text-xs text-[#94A3B8] capitalize">
+                        {g.distanceM} m away · {String(g.status).replace('_', ' ')} · {g.upvotes} supporters
+                      </p>
+                    </div>
+                    {supportedIds.includes(g.id) ? (
+                      <span className="text-xs font-semibold text-[#16A34A]">✓ Supported</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSupport(g.id)}
+                        className="text-xs font-semibold text-[#0EA5A0] bg-[#F0FDFA] border border-[#CFEFEC] px-3 py-1.5 rounded-full hover:bg-[#E0FBF7] active:scale-95 transition-all"
+                      >
+                        + Support
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <button
             type="submit"

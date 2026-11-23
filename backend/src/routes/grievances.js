@@ -10,6 +10,7 @@ const {
   getPublicGrievanceById,
   updateGrievanceStatus,
   upvoteGrievance,
+  deleteGrievance,
 } = require('../repositories/grievanceRepo');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -78,7 +79,53 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch grievances' });
   }
 });
+function distanceMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
+// Keep this ABOVE router.get('/:id'), otherwise "nearby" is read as an id
+router.get('/nearby', async (req, res) => {
+  try {
+    const lat = parseFloat(req.query.lat);
+    const lng = parseFloat(req.query.lng);
+    if (isNaN(lat) || isNaN(lng)) {
+      return res.status(400).json({ error: 'lat and lng are required' });
+    }
+    const radius = Math.min(Math.max(parseFloat(req.query.radius) || 100, 10), 500);
+    const category = req.query.category;
+
+    const all = await getAllGrievances();
+    const nearby = all
+      .filter((g) => g.status !== 'resolved' && g.location?.lat != null && g.location?.lng != null)
+      .filter((g) => !category || g.category === category)
+      .map((g) => ({
+        id: g.id,
+        title: g.title,
+        category: g.category,
+        status: g.status,
+        upvotes: g.upvotes || 0,
+        createdAt: g.createdAt,
+        distanceM: Math.round(
+          distanceMeters(lat, lng, Number(g.location.lat), Number(g.location.lng))
+        ),
+      }))
+      .filter((g) => g.distanceM <= radius)
+      .sort((a, b) => a.distanceM - b.distanceM)
+      .slice(0, 5);
+
+    res.json(nearby);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch nearby grievances' });
+  }
+});
 router.get('/:id', async (req, res) => {
   try {
     const grievance = await getGrievanceById(req.params.id);
@@ -243,6 +290,20 @@ router.get('/:id/public', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch public grievance' });
+  }
+});
+
+// Admin only: permanently delete a grievance with its photos, timeline and evidence
+router.delete('/:id', verifyToken, requireRole('admin'), async (req, res) => {
+  try {
+    const deleted = await deleteGrievance(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Grievance not found' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete grievance' });
   }
 });
 

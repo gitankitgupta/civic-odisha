@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import { API_BASE_URL } from '../config';
 import { translations, LANGUAGES } from '../i18n';
 import { useLanguage } from '../LanguageContext';
+import AnimatedCounter from '../components/AnimatedCounter';
+import WardLeaderboard from '../components/WardLeaderboard';
 import 'leaflet/dist/leaflet.css';
 
 const CATEGORY_COLORS = {
@@ -16,6 +18,7 @@ const CATEGORY_COLORS = {
 };
 
 const DEFAULT_CENTER = [20.2961, 85.8245];
+const mediaSrc = (url) => (url && url.startsWith('http') ? url : `${API_BASE_URL}${url}`);
 
 function useReveal() {
   const ref = useRef(null);
@@ -61,6 +64,8 @@ export default function Landing() {
   const [beforeError, setBeforeError] = useState(false);
   const [afterError, setAfterError] = useState(false);
   const [mapPoints, setMapPoints] = useState([]);
+  const [statsLoaded, setStatsLoaded] = useState(false);
+  const [recentResolved, setRecentResolved] = useState([]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -76,6 +81,14 @@ export default function Landing() {
         const inProgress = data.filter((g) => g.status === 'in_progress').length;
         const resolved = data.filter((g) => g.status === 'resolved').length;
         setStats({ open, inProgress, resolved, total: data.length });
+        setStatsLoaded(true);
+
+        setRecentResolved(
+          data
+            .filter((g) => g.status === 'resolved')
+            .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+            .slice(0, 6)
+        );
 
         const withPhoto = data.find((g) => g.status === 'resolved' && g.media?.length);
         if (withPhoto) {
@@ -111,6 +124,7 @@ export default function Landing() {
         .display-font { font-family: 'Space Grotesk', sans-serif; }
         @keyframes pulse-pin { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.5; } }
         .pin-pulse { animation: pulse-pin 2.4s ease-in-out infinite; }
+        @keyframes civic-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .hero-map .leaflet-control-zoom { display: none; }
         .hero-map .leaflet-control-attribution { font-size: 9px; }
       `}</style>
@@ -207,7 +221,13 @@ export default function Landing() {
             {/* Floating status badge overlay */}
             <div className="absolute top-4 left-4 bg-white shadow-lg rounded-xl px-3 py-2 border border-[#E5EEEC] flex items-center gap-2 text-xs font-medium z-[1000]">
               <span className="w-2 h-2 rounded-full bg-amber-500 pin-pulse" />
-              {stats.total} {t.issuesReported}
+              {statsLoaded ? (
+                <span>
+                  <AnimatedCounter to={stats.total} /> {t.issuesReported}
+                </span>
+              ) : (
+                'Loading...'
+              )}
             </div>
           </div>
         </div>
@@ -302,7 +322,9 @@ export default function Landing() {
                   { label: t.statusResolved, value: stats.resolved, color: '#16A34A' },
                 ].map((s) => (
                   <div key={s.label} className="text-center">
-                    <p className="display-font text-4xl font-bold" style={{ color: s.color }}>{s.value}</p>
+                    <p className="display-font text-4xl font-bold" style={{ color: s.color }}>
+                      {statsLoaded ? <AnimatedCounter to={s.value} /> : '–'}
+                    </p>
                     <p className="text-sm text-[#64748B] mt-1">{s.label}</p>
                   </div>
                 ))}
@@ -312,8 +334,32 @@ export default function Landing() {
                   <span key={cat} className="text-xs font-medium bg-[#F0FDFA] text-[#0EA5A0] px-3 py-1.5 rounded-full">{cat}</span>
                 ))}
               </div>
+
+              {/* Recently resolved ticker */}
+              {recentResolved.length > 0 && (
+                <div className="overflow-hidden mt-6">
+                  <div
+                    className="flex gap-2 w-max"
+                    style={{ animation: 'civic-marquee 25s linear infinite' }}
+                  >
+                    {[...recentResolved, ...recentResolved].map((g, i) => (
+                      <span
+                        key={`${g.id}-${i}`}
+                        className="text-xs font-semibold text-[#0F766E] bg-[#F0FDFA] border border-[#CFEFEC] px-3 py-1.5 rounded-full whitespace-nowrap capitalize"
+                      >
+                        ✓ {g.title}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </Reveal>
+
+          {/* Ward leaderboard */}
+          <div className="mt-10">
+            <WardLeaderboard />
+          </div>
         </div>
       </section>
 
@@ -327,7 +373,7 @@ export default function Landing() {
                 <div className="aspect-square rounded-2xl overflow-hidden bg-[#F0FDFA] border border-[#E5EEEC] flex items-center justify-center">
                   {sampleEvidence && !beforeError ? (
                     <img
-                      src={`${API_BASE_URL}${sampleEvidence.before}`}
+                      src={mediaSrc(sampleEvidence.before)}
                       alt="Reported issue"
                       className="w-full h-full object-cover"
                       onError={() => setBeforeError(true)}
@@ -342,7 +388,7 @@ export default function Landing() {
                 <div className="aspect-square rounded-2xl overflow-hidden bg-[#F0FDFA] border border-[#E5EEEC] flex items-center justify-center">
                   {sampleEvidence && !afterError ? (
                     <img
-                      src={`${API_BASE_URL}${sampleEvidence.after}`}
+                      src={mediaSrc(sampleEvidence.after)}
                       alt="Resolution evidence"
                       className="w-full h-full object-cover"
                       onError={() => setAfterError(true)}

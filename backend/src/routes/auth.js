@@ -4,8 +4,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { createUser, getUserByEmail } = require('../repositories/userRepo');
 const { loginLimiter } = require('../middleware/rateLimiter');
+const { verifyToken, requireRole } = require('../middleware/auth');
 
-router.post('/register', async (req, res) => {
+router.post('/register', verifyToken, requireRole('admin'), async (req, res) => {
   try {
     const { name, email, password, role, wardId } = req.body;
 
@@ -27,6 +28,7 @@ router.post('/register', async (req, res) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
+
     console.error(err);
     res.status(500).json({ error: 'Failed to register user' });
   }
